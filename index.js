@@ -58,3 +58,7 @@ app.delete('/biodata/:id', (req, res) => {
         [id]
     )
     ...
+    // Di setiap blok .catch(err => { ... }) dan bagian bawah:
+app.listen(port, () => {
+    console.log(`App running on port ${port}.`);
+});
