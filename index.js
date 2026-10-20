@@ -5,27 +5,37 @@ const app = express()
 const port = 3000
 const { Pool } = pg
 
+// Middleware
 app.use(express.json())
 app.use(
     express.urlencoded({
         extended: true,
     })
 )
+
+// Konfigurasi Koneksi PostgreSQL
 const pool = new Pool({
     user: 'postgres',
     host: 'localhost',
     database: 'mahasiswa',
-    password: 'Rachel18',
+    password: 'Rachel18', 
     port: 5432,
 })
+
+// 1. GET ALL - Mengambil seluruh data biodata
 app.get('/biodata', (req, res) => {
     console.log("TEST DATA GET ALL :");
     pool.query('SELECT * FROM biodata ORDER BY id ASC')
         .then(result => {
             res.send(result.rows);
         })
-        .catch(err => { ... });
+        .catch(err => {
+            console.error(err);
+            res.status(500).send('Internal Server Error');
+        });
 });
+
+// 2. POST - Menambah data baru
 app.post('/biodata', (req, res) => {
     const { nama, nim, kelas } = req.body;
     pool.query(
@@ -33,11 +43,18 @@ app.post('/biodata', (req, res) => {
         [nama, nim, kelas]
     )
         .then(result => {
-            res.status(201).json({ ... });
+            res.status(201).json({
+                message: "Data berhasil ditambahkan",
+                data: result.rows[0]
+            });
         })
-        .catch(err => { ... });
+        .catch(err => {
+            console.error(err);
+            res.status(500).send('Internal Server Error');
+        });
 });
 
+// 3. PUT - Memperbarui data berdasarkan ID
 app.put('/biodata/:id', (req, res) => {
     const { id } = req.params;
     const { nama, nim, kelas } = req.body;
@@ -45,20 +62,48 @@ app.put('/biodata/:id', (req, res) => {
         'UPDATE biodata SET nama = $1, nim = $2, kelas = $3 WHERE id = $4 RETURNING *',
         [nama, nim, kelas, id]
     )
-    ...
-    if (result.rowCount === 0) {
-    return res.status(404).json({
-        message: "Data tidak ditemukan"
-    });
-}
+        .then(result => {
+            if (result.rowCount === 0) {
+                return res.status(404).json({
+                    message: "Data tidak ditemukan"
+                });
+            }
+            res.json({
+                message: "Data berhasil diupdate",
+                data: result.rows[0]
+            });
+        })
+        .catch(err => {
+            console.error(err);
+            res.status(500).send('Internal Server Error');
+        });
+});
+
+// 4. DELETE - Menghapus data berdasarkan ID
 app.delete('/biodata/:id', (req, res) => {
     const { id } = req.params;
     pool.query(
         'DELETE FROM biodata WHERE id = $1 RETURNING *',
         [id]
     )
-    ...
-    // Di setiap blok .catch(err => { ... }) dan bagian bawah:
+        .then(result => {
+            if (result.rowCount === 0) {
+                return res.status(404).json({
+                    message: "Data tidak ditemukan"
+                });
+            }
+            res.json({
+                message: "Data berhasil dihapus",
+                data: result.rows[0]
+            });
+        })
+        .catch(err => {
+            console.error(err);
+            res.status(500).send('Internal Server Error');
+        });
+});
+
+// Menjalankan Server
 app.listen(port, () => {
     console.log(`App running on port ${port}.`);
 });
