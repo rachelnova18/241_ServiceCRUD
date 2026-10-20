@@ -26,3 +26,14 @@ app.get('/biodata', (req, res) => {
         })
         .catch(err => { ... });
 });
+app.post('/biodata', (req, res) => {
+    const { nama, nim, kelas } = req.body;
+    pool.query(
+        'INSERT INTO biodata (nama, nim, kelas) VALUES ($1, $2, $3) RETURNING *',
+        [nama, nim, kelas]
+    )
+        .then(result => {
+            res.status(201).json({ ... });
+        })
+        .catch(err => { ... });
+});
